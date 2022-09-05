@@ -4,7 +4,7 @@ PORT = 1234
 HEADER_SIZE = 10
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((socket.gethostname(), PORT))
+s.bind(('127.0.0.1', PORT))
 s.listen(2)
 print('waiting for client')
 client_socket, address = s.accept()
