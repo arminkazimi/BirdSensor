@@ -69,17 +69,17 @@ while True:
     json_string = msg.decode('utf-8')
     res_data = json.loads(json_string)
     print(res_data)
-    if res_data.get('find') == 'true':
+    if res_data.get('find'):
         message = True
         data = identify_device(message)
         json_object = json.dumps(data)
         client_socket.sendall(bytes(json_object, 'utf-8'))
-    if res_data.get('identify') == 'true':
+    if res_data.get('identify'):
         message = True
         data = read_data_once(message)
         json_object = json.dumps(data)
         client_socket.sendall(bytes(json_object, 'utf-8'))
-    if res_data.get('read_data_once') == 'true':
+    if res_data.get('read_data_once'):
         message = True
         data = start_stream_data(message)
         json_object = json.dumps(data)
