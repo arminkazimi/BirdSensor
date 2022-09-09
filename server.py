@@ -2,15 +2,29 @@ import socket
 import json
 
 PORT = 1234
-
-
+VENDOR_ID = '1422'
+PRODUCT_ID = '5014'
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # s.bind((socket.gethostname(), PORT))
 s.bind(('127.0.0.1', PORT))
 s.listen(2)
 print('waiting for client')
+
+#  TODO run client.exe
+
 client_socket, address = s.accept()
 print(f'connection from {address} has been successful!')
+
+
+def find_device(vendor_id=VENDOR_ID, product_id=PRODUCT_ID):
+    data = data_dict = {
+        'command': 'findDevice',
+        'data': {
+            'vendorID': vendor_id,
+            'productID': product_id
+        }
+    }
+    return data
 
 
 def identify_device(message):
@@ -42,33 +56,26 @@ def start_stream_data(message):
         return data
 
 
-i = 0
+# TODO RUN TEREAD
 while True:
-    i += 1
-    print(i)
-    data_dict = {
-        'command': 'findDevice',
-        'data': {
-            'vendorID': '1422',
-            'productID': '5014'
-        }
-    }
+
+    data_dict = find_device
     json_object = json.dumps(data_dict)
 
     client_socket.sendall(bytes(json_object, 'utf-8'))
     msg = client_socket.recv(30)
     print(msg)
-    if msg == 'true':
+    if msg == 'find_true':
         message = True
         data = identify_device(message)
         json_object = json.dumps(data)
         client_socket.sendall(bytes(json_object, 'utf-8'))
-    if msg == 'true':
+    if msg == 'identify_true':
         message = True
         data = identify_device(message)
         json_object = json.dumps(data)
         client_socket.sendall(bytes(json_object, 'utf-8'))
 
-    if msg == '':
+    if msg == 'dis':
         print('connection closed')
         client_socket.close()

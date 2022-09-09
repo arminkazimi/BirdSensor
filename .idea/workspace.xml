@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="32743d52-a555-4645-b73e-43ac3b9b6b3e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/server.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +126,7 @@
       <workItem from="1662386801014" duration="6892000" />
       <workItem from="1662396550585" duration="1085000" />
       <workItem from="1662412831291" duration="10000" />
-      <workItem from="1662708705822" duration="2530000" />
+      <workItem from="1662708705822" duration="5512000" />
     </task>
     <task id="LOCAL-00001" summary="update">
       <created>1662386849990</created>
@@ -162,7 +163,14 @@
       <option name="project" value="LOCAL" />
       <updated>1662711084708</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="update git ignore 2">
+      <created>1662711377591</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1662711377591</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -173,7 +181,8 @@
     <MESSAGE value="update other commands" />
     <MESSAGE value="update git ignor" />
     <MESSAGE value="update git ignor2" />
-    <option name="LAST_COMMIT_MESSAGE" value="update git ignor2" />
+    <MESSAGE value="update git ignore 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="update git ignore 2" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/birdPower$server.coverage" NAME="server Coverage Results" MODIFIED="1662710135812" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
