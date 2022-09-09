@@ -60,7 +60,7 @@ def start_stream_data(message):
 json_data = {}
 while True:
 
-    data_dict = find_device
+    data_dict = find_device()
     json_object = json.dumps(data_dict)
 
     client_socket.sendall(bytes(json_object, 'utf-8'))
@@ -84,10 +84,9 @@ while True:
         client_socket.sendall(bytes(json_object, 'utf-8'))
         msg = client_socket.recv(30)
     if json_data:
-
         print(json_data)
-        json_object = json.dumps(data)
-        client_socket.sendall(bytes(json_object, 'utf-8'))
+        # json_object = json.dumps(data)
+        # client_socket.sendall(bytes(json_object, 'utf-8'))
     if msg == 'disconnect':
         print('connection closed')
         client_socket.close()
