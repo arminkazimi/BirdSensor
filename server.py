@@ -64,8 +64,8 @@ while True:
     json_object = json.dumps(data_dict)
 
     client_socket.sendall(bytes(json_object, 'utf-8'))
-    response_json = client_socket.recv(30)
-    print(response_json)
+    msg = client_socket.recv(30)
+
     print(msg)
     if msg == 'find_true':
         message = True
