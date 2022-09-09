@@ -57,13 +57,15 @@ def start_stream_data(message):
 
 
 # TODO RUN TEREAD
+json_data = {}
 while True:
 
     data_dict = find_device
     json_object = json.dumps(data_dict)
 
     client_socket.sendall(bytes(json_object, 'utf-8'))
-    msg = client_socket.recv(30)
+    response_json = client_socket.recv(30)
+    print(response_json)
     print(msg)
     if msg == 'find_true':
         message = True
@@ -72,10 +74,20 @@ while True:
         client_socket.sendall(bytes(json_object, 'utf-8'))
     if msg == 'identify_true':
         message = True
-        data = identify_device(message)
+        data = read_data_once(message)
         json_object = json.dumps(data)
         client_socket.sendall(bytes(json_object, 'utf-8'))
+    if msg == 'read_data_once_true':
+        message = True
+        data = start_stream_data(message)
+        json_object = json.dumps(data)
+        client_socket.sendall(bytes(json_object, 'utf-8'))
+        msg = client_socket.recv(30)
+    if json_data:
 
-    if msg == 'dis':
+        print(json_data)
+        json_object = json.dumps(data)
+        client_socket.sendall(bytes(json_object, 'utf-8'))
+    if msg == 'disconnect':
         print('connection closed')
         client_socket.close()
