@@ -60,24 +60,26 @@ def start_stream_data(message):
 json_data = {}
 while True:
 
-    data_dict = find_device()
-    json_object = json.dumps(data_dict)
+    req_data = find_device()
+    json_object = json.dumps(req_data)
 
     client_socket.sendall(bytes(json_object, 'utf-8'))
     msg = client_socket.recv(30)
 
-    print(msg)
-    if msg == 'find_true':
+    json_string = msg.decode('utf-8')
+    res_data = json.loads(json_string)
+    print(res_data)
+    if res_data.get('find') == 'true':
         message = True
         data = identify_device(message)
         json_object = json.dumps(data)
         client_socket.sendall(bytes(json_object, 'utf-8'))
-    if msg == 'identify_true':
+    if res_data.get('identify') == 'true':
         message = True
         data = read_data_once(message)
         json_object = json.dumps(data)
         client_socket.sendall(bytes(json_object, 'utf-8'))
-    if msg == 'read_data_once_true':
+    if res_data.get('read_data_once') == 'true':
         message = True
         data = start_stream_data(message)
         json_object = json.dumps(data)
