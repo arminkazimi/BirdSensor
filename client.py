@@ -8,7 +8,7 @@ print(socket.gethostname())
 s.connect((socket.gethostname(), PORT))
 
 while True:
-    print(s.recv(3))
-    time.sleep(5)
+    print(s.recv(100))
+    time.sleep(1)
     s.send(bytes('command received', 'utf-8'))
 #     do anything
