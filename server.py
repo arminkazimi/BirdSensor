@@ -21,6 +21,7 @@ HOST = '127.0.0.1'
 # VENDOR_ID = '1422'
 # PRODUCT_ID = '5014'
 CLIENT_PATH = 'cs_app\\PowerBird.exe'
+LOG_FILE_PATH = 'client_log.txt'
 
 
 class myApp:
@@ -41,6 +42,7 @@ class myApp:
         self.vendor_id = VENDOR_ID
         self.product_id = PRODUCT_ID
         self.client_path = CLIENT_PATH
+        self.log_path = LOG_FILE_PATH
         self.host = HOST
         self.quit_app = False
         self.disconnect = False
@@ -61,8 +63,8 @@ class myApp:
 
     def communicate(self):
         while not self.state.get('find'):
-            print('finding...')
             self.accept_socket_client()
+            print('finding...')
             response = self.send_receive_data(self.find_device_message)
             if response.get('find'):
                 print(response)
@@ -81,15 +83,15 @@ class myApp:
             self.exit_app(response)
             time.sleep(1)
 
-        while not self.state.get('readDataOnce') and self.state.get('find') and self.state.get('identify'):
-            print('Read data once...')
-            response = self.send_receive_data(myApp.read_data_once)
-            if response.get('readDataOnce'):
-                self.state['readDataOnce'] = True
-                print(response)
-                break
-            self.exit_app(response)
-            time.sleep(1)
+        # while not self.state.get('readDataOnce') and self.state.get('find') and self.state.get('identify'):
+        #     print('Read data once...')
+        #     response = self.send_receive_data(myApp.read_data_once)
+        #     if response.get('readDataOnce'):
+        #         self.state['readDataOnce'] = True
+        #         print(response)
+        #         break
+        #     self.exit_app(response)
+        #     time.sleep(1)
         # Start data stream
         while (self.state.get('findAndIdentify') or (
                 self.state.get('find') and self.state.get('identify')) and not self.state.get('startDataStream')):
@@ -106,7 +108,6 @@ class myApp:
             response = json.loads(json_string)
             print(response)
             self.exit_app(response)
-
 
     def on_press(self, key):
         if key == keyboard.Key.esc:
@@ -133,8 +134,8 @@ class myApp:
 
     def execute_client_app(self):
         try:
-            # subprocess.Popen(["rm", "-r", self.client_path])
-            subprocess.Popen(self.client_path)
+            subprocess.Popen(['START', '/B', self.client_path, '>', self.log_path])
+            # subprocess.Popen(self.client_path)
             print('client is running...')
         except Exception as e:
             print('execute client app error: ', e)
