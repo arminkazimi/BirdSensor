@@ -8,7 +8,7 @@ import os
 import subprocess
 from pynput import keyboard
 
-PRODUCTION = True
+PRODUCTION = False
 
 VENDOR_ID = '0909'
 PRODUCT_ID = '0051'
