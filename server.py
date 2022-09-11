@@ -8,7 +8,7 @@ import os
 import subprocess
 from pynput import keyboard
 
-PRODUCTION = False
+PRODUCTION = True
 
 VENDOR_ID = '0909'
 PRODUCT_ID = '0051'
@@ -20,8 +20,8 @@ PORT = 1234
 HOST = '127.0.0.1'
 # VENDOR_ID = '1422'
 # PRODUCT_ID = '5014'
-CLIENT_PATH = 'cs_app\\PowerBird.exe'
-LOG_FILE_PATH = 'client_log.txt'
+CLIENT_PATH = r'cs_app\PowerBird.exe'
+LOG_FILE_PATH = r'client_log.txt'
 
 
 class myApp:
@@ -95,7 +95,7 @@ class myApp:
         # Start data stream
         while (self.state.get('findAndIdentify') or (
                 self.state.get('find') and self.state.get('identify')) and not self.state.get('startDataStream')):
-            response = self.send_receive_data(myApp.start_stream_data)
+            response = self.send_receive_data(self.start_stream_data)
             if response.get('StartDataStream'):
                 self.state['startDataStream'] = True
                 print(response)
@@ -134,7 +134,7 @@ class myApp:
 
     def execute_client_app(self):
         try:
-            subprocess.Popen(['START', '/B', self.client_path, '>', self.log_path])
+            subprocess.call(['START ', '/B ', 'D:\Documents\imp\project\birdPower\cs_app\PowerBird.exe ', '> ', self.log_path])
             # subprocess.Popen(self.client_path)
             print('client is running...')
         except Exception as e:
