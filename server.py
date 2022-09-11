@@ -8,17 +8,35 @@ import os
 import subprocess
 from pynput import keyboard
 
+PRODUCTION = True
+
+VENDOR_ID = '0909'
+PRODUCT_ID = '0051'
+
+DATA_LIMIT = True
+DATA_COUNT = 20
+
 PORT = 1234
 HOST = '127.0.0.1'
 # VENDOR_ID = '1422'
 # PRODUCT_ID = '5014'
-VENDOR_ID = '0909'
-PRODUCT_ID = '0051'
 CLIENT_PATH = 'cs_app\\PowerBird.exe'
 
 
 class myApp:
     def __init__(self):
+        self.state = {'find': False,
+                      'identify': False,
+                      'findAndIdentify': False,
+                      'readDataOnce': False,
+                      'stopDataStream': False,
+                      'startDataStream': False,
+                      'exit': False
+                      }
+        self.data_property = {
+            'limit': DATA_LIMIT,
+            'count': DATA_COUNT
+        }
         self.port = PORT
         self.vendor_id = VENDOR_ID
         self.product_id = PRODUCT_ID
@@ -34,12 +52,61 @@ class myApp:
         keyboard_listener_thread.start()
 
         self.run_socket_server()
-
-        # client_app_thread = threading.Thread(target=self.execute_client_app)
-        # client_app_thread.start()
+        if PRODUCTION:
+            client_app_thread = threading.Thread(target=self.execute_client_app)
+            client_app_thread.start()
 
         communicate_thread = threading.Thread(target=self.communicate)
         communicate_thread.start()
+
+    def communicate(self):
+        while not self.state.get('find'):
+            print('finding...')
+            self.accept_socket_client()
+            response = self.send_receive_data(self.find_device_message)
+            if response.get('find'):
+                print(response)
+                self.state['find'] = True
+                break
+            self.exit_app(response)
+            time.sleep(1)
+
+        while not self.state.get('identify') and self.state.get('find'):
+            print('Identifying...')
+            response = self.send_receive_data(myApp.identify_device_message)
+            if response.get('identify'):
+                print(response)
+                self.state['identify'] = True
+                break
+            self.exit_app(response)
+            time.sleep(1)
+
+        while not self.state.get('readDataOnce') and self.state.get('find') and self.state.get('identify'):
+            print('Read data once...')
+            response = self.send_receive_data(myApp.read_data_once)
+            if response.get('readDataOnce'):
+                self.state['readDataOnce'] = True
+                print(response)
+                break
+            self.exit_app(response)
+            time.sleep(1)
+        # Start data stream
+        while (self.state.get('findAndIdentify') or (
+                self.state.get('find') and self.state.get('identify')) and not self.state.get('startDataStream')):
+            response = self.send_receive_data(myApp.start_stream_data)
+            if response.get('StartDataStream'):
+                self.state['startDataStream'] = True
+                print(response)
+                break
+            self.exit_app(response)
+            time.sleep(1)
+        while self.state.get('startDataStream'):
+            msg = self.client_socket.recv(1024)
+            json_string = msg.decode('utf-8')
+            response = json.loads(json_string)
+            print(response)
+            self.exit_app(response)
+
 
     def on_press(self, key):
         if key == keyboard.Key.esc:
@@ -66,6 +133,7 @@ class myApp:
 
     def execute_client_app(self):
         try:
+            # subprocess.Popen(["rm", "-r", self.client_path])
             subprocess.Popen(self.client_path)
             print('client is running...')
         except Exception as e:
@@ -86,203 +154,86 @@ class myApp:
         else:
             print(f'There is connection from {self.address} has not closed yet')
 
-    def communicate(self):
+    def send_receive_data(self, my_function):
+        data = my_function()
+        print('send_receive_data: ', data)
+        json_object = json.dumps(data)
+        self.client_socket.sendall(bytes(json_object, 'utf-8'))
+        msg = self.client_socket.recv(1024)
+        json_string = msg.decode('utf-8')
+        res_data = json.loads(json_string)
+        return res_data
 
-        while True:
-            self.accept_socket_client()
-            req_data = find_device()
-            json_object = json.dumps(req_data)
-
-            self.client_socket.sendall(bytes(json_object, 'utf-8'))
-            msg = self.client_socket.recv(30)
-
-            json_string = msg.decode('utf-8')
-            res_data = json.loads(json_string)
-            print(res_data)
-            if res_data.get('find'):
-                message = True
-                data = identify_device(message)
-                json_object = json.dumps(data)
-                self.client_socket.sendall(bytes(json_object, 'utf-8'))
-            if res_data.get('identify'):
-                message = True
-                data = read_data_once(message)
-                json_object = json.dumps(data)
-                self.client_socket.sendall(bytes(json_object, 'utf-8'))
-            if res_data.get('read_data_once'):
-                message = True
-                data = start_stream_data(message)
-                json_object = json.dumps(data)
-                self.client_socket.sendall(bytes(json_object, 'utf-8'))
-                msg = self.client_socket.recv(30)
-
-            if self.quit_app:
-                self.send_close_message()
-
-                self.client_socket.close()
-                # self.kill_client_exe()
-
-                # self.client_socket = None
-                time.sleep(2)
-                print('quit the app')
-                sys.exit()
-
-            if res_data.get('disconnect') or self.disconnect:
-                self.send_close_message()
-                # self.client_socket.shutdow()
-                self.client_socket.close()
-                print('closed connection',self.client_socket)
-                # self.client_socket = None
-                print('connection closed')
-                # time.sleep(2)
-            print(self.client_socket)
-            time.sleep(2)
-
-    def send_close_message(self):
-        data = {'command': 'exit'}
+    @staticmethod
+    def close_message():
+        data = {'command': 'Exit'}
         return data
 
-    def kill_client_exe(self):
+    def exit_app(self, response):
+        if self.quit_app:
+            print('quit the app...')
+            data = myApp.close_message()
+            json_object = json.dumps(data)
+            self.client_socket.sendall(bytes(json_object, 'utf-8'))
+            self.client_socket.close()
+            self.kill_client_exe()
+            # self.client_socket = None
+            time.sleep(1)
+            print('quited')
+            sys.exit()
+
+        if response.get('disconnect') or self.disconnect:
+            print('disconnecting...')
+            self.state = dict.fromkeys(self.state, False)
+            # self.close_message()
+            self.client_socket.close()
+            print('closed connection', self.client_socket)
+            self.client_socket = None
+            print('connection closed')
+
+    @staticmethod
+    def kill_client_exe():
         try:
             subprocess.call(['taskkill', '/IM', 'PowerBird.exe', '/F'])
         except BaseException as e:
             print('killing exe file exception:', e)
 
-
-# def on_press(key):
-#     if key == keyboard.Key.esc:
-#         global my_quit
-#         my_quit == True
-#         return True
-#         # stop listener
-#     try:
-#         k = key.char  # single-char keys
-#         print(k)
-#     except:
-#         k = key.name  # other keys
-#         print(k)
-#     # if k in ['1', '2', 'left', 'right']:  # keys of interest
-#     #     # self.keys.append(k)  # store it in global-like variable
-#     #     print('Key pressed: ' + k)
-#     #     return False  # stop listener; remove this if want more keys
-#
-#
-# def commands():
-#     listener = keyboard.Listener(on_press=on_press)
-#     listener.start()  # start to listen on a separate thread
-#     listener.join()
-
-
-# command_thread = threading.Thread(target=commands)
-# command_thread.start()
-
-# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# # s.bind((socket.gethostname(), PORT))
-# s.bind(('127.0.0.1', PORT))
-# s.listen(1)
-# print('waiting for client...')
-# client_thread = threading.Thread(target=execute_client)
-# client_thread.start()
-
-#  TODO run client.exe
-
-# client_socket, address = s.accept()
-# print(f'connection from {address} has been successful!')
-
-
-def find_device(vendor_id=VENDOR_ID, product_id=PRODUCT_ID):
-    data = data_dict = {
-        'command': 'findDevice',
-        'data': {
-            'vendorID': vendor_id,
-            'productID': product_id
+    def find_device_message(self):
+        data = {
+            'command': 'findDevice',
+            'data': {
+                'vendorID': self.vendor_id,
+                'productID': self.product_id
+            }
         }
-    }
-    return data
+        return data
 
-def find_and_identify(vendor_id=VENDOR_ID, product_id=PRODUCT_ID):
-    data = data_dict = {
-        'command': 'FindAndIdentify',
-        'data': {
-            'vendorID': vendor_id,
-            'productID': product_id
-        }
-    }
-    return data
-
-def identify_device(message):
-    if message:
+    @staticmethod
+    def identify_device_message():
         data = {'command': 'IdentifyDevice'}
         return data
-    else:
-        data = {'command': 'findDevice'}
+
+    def find_and_identify_message(self):
+        data = {
+            'command': 'FindAndIdentify',
+            'data': {
+                'vendorID': self.vendor_id,
+                'productID': self.product_id
+            }
+        }
         return data
 
-
-def read_data_once(message):
-    if message:
+    @staticmethod
+    def read_data_once():
         data = {'command': 'ReadDataOnce'}
         return data
-    else:
-        data = {'command': 'IdentifyDevice'}
-        return data
 
-
-def start_stream_data(message):
-    if message:
+    def start_stream_data(self):
         data = {'command': 'StartDataStream', 'data': {
-            'limit': -1
+            'limit': self.data_property.get('limit'),
+            'count': self.data_property.get('count')
         }}
         return data
-    else:
-        data = {'command': 'ReadDataOnce'}
-        return data
-
-
-# def do_while(function, message):
-#     if message == 'find':
-#         req_data = find_device()
-#     # elif
-#     json_object = json.dumps(req_data)
-#     while True:
-#         print(json_object)
-#         client_socket.sendall(bytes(json_object, 'utf-8'))
-#         msg = client_socket.recv(30)
-#         json_string = msg.decode('utf-8')
-#         res_data = json.loads(json_string)
-#         print(res_data)
-#         if res_data.get('find'):
-#             req_data = identify_device(True)
-#             json_object = json.dumps(req_data)
-#             break
-
-
-def do_sensor(client_socket):
-    req_data = find_device()
-    json_object = json.dumps(req_data)
-    while True:
-        print(json_object)
-        client_socket.sendall(bytes(json_object, 'utf-8'))
-        msg = client_socket.recv(30)
-        json_string = msg.decode('utf-8')
-        res_data = json.loads(json_string)
-        print(res_data)
-        if res_data.get('find'):
-            req_data = identify_device(True)
-            json_object = json.dumps(req_data)
-            break
-
-    while True:
-        print(json_object)
-        client_socket.sendall(bytes(json_object, 'utf-8'))
-        msg = client_socket.recv(30)
-        json_string = msg.decode('utf-8')
-        res_data = json.loads(json_string)
-        print(res_data)
-        if res_data.get('identify'):
-            req_data = read_data_once(True)
-            json_object = json.dumps(req_data)
-            break
 
 
 my_app = myApp()
